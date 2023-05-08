@@ -46,10 +46,12 @@ async def ask(
 
     return {"result": result}
 
+
 @app.post("/upsert")
 async def upsert():
     vector_db = get_vector_db()
     return vector_db.upsert()
+
 
 @app.get("/health")
 async def health():
