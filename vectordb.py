@@ -5,6 +5,9 @@ from typing import List
 import pinecone
 from datasets import load_dataset
 from loguru import logger
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
+from qdrant_client.http.models import CollectionStatus, PointStruct, UpdateStatus
 
 
 class VectorDatabase:
@@ -28,7 +31,7 @@ class VectorDatabase:
 class PineconeDB(VectorDatabase):
     def __init__(self, index_name):
         super().__init__(index_name)
-        self.batch_size = 50
+        self.batch_size = 100  # Adjust the batch size as per your requirements
         pinecone.init(
             api_key=os.environ["PINECONE_API_KEY"],
             environment=os.environ["PINECONE_ENVIRONMENT"],
@@ -41,17 +44,16 @@ class PineconeDB(VectorDatabase):
         self.index = pinecone.Index(index_name=index_name)
 
     def upsert(self) -> str:
-        batch_size = 100  # Adjust the batch size as per your requirements
         logger.info(f"total vectors from upsert: {len(self.dataset)}")
         num_vectors = len(self.dataset)
         logger.info(f"total num of vectors from upsert: {num_vectors}")
-        num_batches = math.ceil(num_vectors / batch_size)
+        num_batches = math.ceil(num_vectors / self.batch_size)
 
         logger.info(f"Upserting {num_vectors} vectors in {num_batches} batches")
 
         for i in range(num_batches):
-            start_idx = i * batch_size
-            end_idx = min((i + 1) * batch_size, num_vectors)
+            start_idx = i * self.batch_size
+            end_idx = min((i + 1) * self.batch_size, num_vectors)
 
             vectors_batch = [
                 (
@@ -88,7 +90,7 @@ class PineconeDB(VectorDatabase):
 # Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
 # uvicorn.run(app, host="0.0.0.0", port=8000)
 
-# Output:
+# Pinecone Output:
 # {
 #     "matches": [
 #         {
@@ -102,3 +104,86 @@ class PineconeDB(VectorDatabase):
 #     ],
 #     "namespace": "",
 # }
+
+
+class QdrantDB(VectorDatabase):
+    def __init__(self, index_name):
+        super().__init__(index_name)
+        self.batch_size = 100  # Adjust the batch size as per your requirements
+
+        self.qdrant_client = QdrantClient(
+            os.environ["QDRANT_URL"],
+            prefer_grpc=True,
+            api_key=os.environ["QDRANT_API_KEY"],
+        )
+
+        collection_info = self.qdrant_client.get_collection(
+            collection_name=self.index_name
+        )
+
+        # Create the collection(index) if it doesn't exist
+        if collection_info.status != CollectionStatus.GREEN:
+            self.qdrant_client.recreate_collection(
+                collection_name=self.index_name,
+                vectors_config=models.VectorParams(
+                    size=768, distance=models.Distance.COSINE
+                ),
+            )
+
+    def upsert(self) -> str:
+        logger.info(f"total vectors from upsert: {len(self.dataset)}")
+        num_vectors = len(self.dataset)
+        logger.info(f"total num of vectors from upsert: {num_vectors}")
+        num_batches = math.ceil(num_vectors / self.batch_size)
+
+        logger.info(f"Upserting {num_vectors} vectors in {num_batches} batches")
+
+        for i in range(num_batches):
+            start_idx = i * self.batch_size
+            end_idx = min((i + 1) * self.batch_size, num_vectors)
+
+            vectors_batch = [
+                PointStruct(
+                    id=self.dataset[j]["id"],
+                    vector=self.dataset[j]["emb"],
+                    payload={"text": self.dataset[j]["text"]},
+                )
+                for j in range(start_idx, end_idx)
+            ]
+
+            logger.info(
+                f"Upserting batch {i + 1} of {num_batches}, from {start_idx} to {end_idx}"
+            )
+
+            operation_info = self.qdrant_client.upsert(
+                collection_name=self.index_name, wait=True, points=vectors_batch
+            )
+
+            if operation_info.status != UpdateStatus.COMPLETED:
+                raise Exception("Upsert failed")
+
+        logger.info(f"Upserted {num_vectors} vectors")
+
+        return "Upserted successfully"
+
+    def query(self, query_embedding: List[float]) -> dict:
+        # Qdrant Output:
+        # {
+        #     "result": [
+        #         {"id": 4, "score": 1.362},
+        #         {"id": 1, "score": 1.273},
+        #         {"id": 3, "score": 1.208},
+        #     ],
+        #     "status": "ok",
+        #     "time": 0.000055785,
+        # }
+        return self.qdrant_client.search(
+            collection_name=self.index_name,
+            query_vector=query_embedding,
+            limit=self.top_k,
+            with_payload=True,
+        )
+
+    def delete_index(self) -> str:
+        self.qdrant_client.delete_collection(collection_name=self.index_name)
+        return "Index deleted"

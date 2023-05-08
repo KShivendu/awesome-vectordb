@@ -24,20 +24,20 @@ class QueryRequest(BaseModel):
 # Dependency function to choose a vector database implementation
 def get_vector_db() -> Type[VectorDatabase]:
     # Choose either PineconeDatabase or QdrantDatabase here
-    vector_db_class = PineconeDB  # or QdrantDatabase
+    vector_db_class = PineconeDB  # or QdrantDB
     return vector_db_class(index_name)
 
 
-@app.on_event("startup")
-async def startup_event():
-    vector_db = get_vector_db()
-    vector_db.upsert()
+# @app.on_event("startup")
+# async def startup_event():
+#     vector_db = get_vector_db()
+#     vector_db.upsert()
 
 
 @app.post("/ask")
 async def ask(
     request: QueryRequest, vector_db: VectorDatabase = Depends(get_vector_db)
-):
+) -> dict:
     # Get the embeddings
     query_embeds = co.embed([request.query], model="multilingual-22-12").embeddings
 
@@ -46,8 +46,17 @@ async def ask(
 
     return {"result": result}
 
-
-@app.on_event("shutdown")
-async def shutdown():
+@app.post("/upsert")
+async def upsert():
     vector_db = get_vector_db()
-    vector_db.delete_index()
+    return vector_db.upsert()
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+# @app.on_event("shutdown")
+# async def shutdown():
+#     vector_db = get_vector_db()
+#     vector_db.delete_index()
