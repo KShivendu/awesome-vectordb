@@ -94,12 +94,14 @@ pinecone_obj.upsert()
 
 
 @app.post("/ask")
-async def ask_endpoint(request: QueryRequest):
+async def ask(
+    request: QueryRequest, vector_db: VectorDatabase = Depends(get_vector_db)
+):
     # Get the embeddings
     query_embeds = co.embed([request.query], model="multilingual-22-12").embeddings
 
-    # Query the PineconeDB
-    result = pinecone_obj.query(query_embedding=query_embeds[0])
+    # Query the VectorDatabase
+    result = vector_db.query(query_embedding=query_embeds[0])
 
     return {"result": result}
 
