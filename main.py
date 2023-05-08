@@ -8,18 +8,16 @@ from pydantic import BaseModel
 from vectordb import PineconeDB, VectorDatabase
 
 app = FastAPI()
-
-
-# Define the request model
-class QueryRequest(BaseModel):
-    query: str
-
-
 # Initialize Cohere
 co = cohere.Client(os.environ["COHERE_API_KEY"])
 
 # Define the index name
 index_name = "wikipedia-embeddings"
+
+
+# Define the request model
+class QueryRequest(BaseModel):
+    query: str
 
 
 # Dependency function to choose a vector database implementation

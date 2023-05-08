@@ -3,15 +3,18 @@ from typing import List
 
 import pinecone
 from datasets import load_dataset
+from loguru import logger
 
 
 class VectorDatabase:
     def __init__(self, index_name, top_k: int = 3):
         self.index_name = index_name
+        logger.info(f"Index name: {self.index_name} initialized")
         # Load the dataset
         self.dataset = load_dataset(
             "Cohere/wikipedia-22-12-simple-embeddings", split="train"
         )
+        logger.info(f"Dataset loaded with {len(self.dataset)} records")
         self.top_k = 3
 
     def upsert(self) -> str:
@@ -66,6 +69,10 @@ class PineconeDB(VectorDatabase):
             include_metadata=True,
         )
 
+    def delete_index(self) -> str:
+        pinecone.delete_index(self.index_name)
+        return "Index deleted"
+    
 # Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
 # uvicorn.run(app, host="0.0.0.0", port=8000)
 
