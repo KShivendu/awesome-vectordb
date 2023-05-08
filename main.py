@@ -7,7 +7,7 @@ from typing import List
 from abc import ABC, abstractmethod
 
 
-class VectorDB(ABC):
+class VectorDatabase(ABC):
     def __init__(self, index_name, top_k: int = 3):
         self.index_name = index_name
         # Load the dataset
@@ -29,7 +29,7 @@ class VectorDB(ABC):
         raise NotImplementedError
 
 
-class PineconeDB(VectorDB):
+class PineconeDB(VectorDatabase):
     def __init__(self, index_name):
         super().__init__(index_name)
         self.batch_size = 50
