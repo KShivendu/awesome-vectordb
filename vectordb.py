@@ -1,3 +1,4 @@
+import math
 import os
 from typing import List
 
@@ -15,7 +16,7 @@ class VectorDatabase:
             "Cohere/wikipedia-22-12-simple-embeddings", split="train"
         )
         logger.info(f"Dataset loaded with {len(self.dataset)} records")
-        self.top_k = 3
+        self.top_k = top_k
 
     def upsert(self) -> str:
         raise NotImplementedError
@@ -40,24 +41,34 @@ class PineconeDB(VectorDatabase):
         self.index = pinecone.Index(index_name=index_name)
 
     def upsert(self) -> str:
-        self.vectors = [
-            (
-                f"{self.dataset[i]['id']}",
-                self.dataset[i]["emb"],
-                {"text": self.dataset[i]["text"]},
+        batch_size = 100  # Adjust the batch size as per your requirements
+        logger.info(f"total vectors from upsert: {len(self.dataset)}")
+        num_vectors = len(self.dataset)
+        logger.info(f"total num of vectors from upsert: {num_vectors}")
+        num_batches = math.ceil(num_vectors / batch_size)
+
+        logger.info(f"Upserting {num_vectors} vectors in {num_batches} batches")
+
+        for i in range(num_batches):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, num_vectors)
+
+            vectors_batch = [
+                (
+                    f"{self.dataset[j]['id']}",
+                    self.dataset[j]["emb"],
+                    {"text": self.dataset[j]["text"]},
+                )
+                for j in range(start_idx, end_idx)
+            ]
+
+            logger.info(
+                f"Upserting batch {i + 1} of {num_batches}, from {start_idx} to {end_idx}"
             )
-            for i in range(len(self.dataset))
-        ]
 
-        # Note: When upserting larger amounts of data, upsert data in batches
-        # of 100 vectors or fewer over multiple upsert requests.
+            self.index.upsert(vectors_batch)
 
-        # Upsert the vectors in batches of 50
-        num_vectors = len(self.vectors)
-
-        for i in range(0, num_vectors, self.batch_size):
-            batch = self.vectors[i : i + self.batch_size]
-            self.index.upsert(batch)
+        logger.info(f"Upserted {num_vectors} vectors")
 
         return "Upserted successfully"
 
@@ -72,7 +83,8 @@ class PineconeDB(VectorDatabase):
     def delete_index(self) -> str:
         pinecone.delete_index(self.index_name)
         return "Index deleted"
-    
+
+
 # Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
 # uvicorn.run(app, host="0.0.0.0", port=8000)
 

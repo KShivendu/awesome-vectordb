@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from vectordb import PineconeDB, VectorDatabase
 
 app = FastAPI()
+
 # Initialize Cohere
 co = cohere.Client(os.environ["COHERE_API_KEY"])
 
