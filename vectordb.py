@@ -11,6 +11,9 @@ from qdrant_client.http.models import CollectionStatus, PointStruct, UpdateStatu
 
 
 class VectorDatabase:
+    """VectorDatabase class initializes the Vector Database index_name and loads the dataset
+    for the usage of the subclasses."""
+
     def __init__(self, index_name, top_k: int = 3):
         self.index_name = index_name
         logger.info(f"Index name: {self.index_name} initialized")
@@ -29,6 +32,14 @@ class VectorDatabase:
 
 
 class PineconeDB(VectorDatabase):
+    """PineconeDB class is a subclass of VectorDatabase that
+    interacts with the Pinecone Cloud Vector Database index and
+    has the following methods:
+    - upsert: Upserts the embedding into the Pinecone index along with the metadata
+    - query: Queries the Pinecone index with the query embedding along with the metadata
+    - delete_index: Deletes the Pinecone index
+    """
+
     def __init__(self, index_name):
         super().__init__(index_name)
         self.batch_size = 100  # Adjust the batch size as per your requirements
@@ -75,6 +86,20 @@ class PineconeDB(VectorDatabase):
         return "Upserted successfully"
 
     def query(self, query_embedding: List[float]) -> dict:
+        # Pinecone Output:
+        # {
+        #     "matches": [
+        #         {
+        #             "id": "9",
+        #             "metadata": {
+        #                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
+        #             },
+        #             "score": 40.6401978,
+        #             "values": [0.479291856, ..., 0.31344567],
+        #         }
+        #     ],
+        #     "namespace": "",
+        # }
         return self.index.query(
             vector=query_embedding,
             top_k=self.top_k,
@@ -87,26 +112,15 @@ class PineconeDB(VectorDatabase):
         return "Index deleted"
 
 
-# Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
-# uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# Pinecone Output:
-# {
-#     "matches": [
-#         {
-#             "id": "9",
-#             "metadata": {
-#                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
-#             },
-#             "score": 40.6401978,
-#             "values": [0.479291856, ..., 0.31344567],
-#         }
-#     ],
-#     "namespace": "",
-# }
-
-
 class QdrantDB(VectorDatabase):
+    """QdrantDB class is a subclass of VectorDatabase that
+    interacts with the Qdrant Cloud Vector Database. It has the following methods:
+    - upsert: Upserts the dataset into the Qdrant collection(index) with the payload(metadata)
+    - query: Queries the Qdrant collection(index) with the query embedding along with
+    the payload(metadata)
+    - delete_index: Deletes the Qdrant collection(index)
+    """
+
     def __init__(self, index_name):
         super().__init__(index_name)
         self.batch_size = 100  # Adjust the batch size as per your requirements
