@@ -36,21 +36,19 @@ class PineconeDB(VectorDB):
                 self.dataset[i]["emb"],
                 {"text": self.dataset[i]["text"]},
             )
-            for i in range(len(self.dataset[:10]))
+            for i in range(len(self.dataset))
         ]
 
         # Note: When upserting larger amounts of data, upsert data in batches
         # of 100 vectors or fewer over multiple upsert requests.
 
         # Upsert the vectors in batches of 50
-        # batch_size = 50
-        # num_vectors = len(self.dataset)
+        batch_size = 50
+        num_vectors = len(self.vectors)
 
-        # for i in range(0, num_vectors, batch_size):
-        #     batch = self.dataset[i:i+batch_size]
-        #     self.index.upsert(batch)
-
-        self.index.upsert(self.vectors)
+        for i in range(0, num_vectors, batch_size):
+            batch = self.vectors[i : i + batch_size]
+            self.index.upsert(batch)
 
         return "Upserted successfully"
 
