@@ -68,36 +68,56 @@ class PineconeDB(VectorDB):
         )
 
 
-# Main code
-if __name__ == "__main__":
-    # Step 1: Create an index in Pinecone
-    # Define the index name
-    index_name = "wikipedia-embeddings"
+from fastapi import FastAPI, Body
+from pydantic import BaseModel
+import os
+import cohere
+from pinecone import PineconeDB
 
-    co = cohere.Client(os.environ["COHERE_API_KEY"])
+app = FastAPI()
 
-    # get the embeddings
-    query = "What is Old Testament?"
-    query_embeds = co.embed([query], model="multilingual-22-12").embeddings
 
-    # Initialize the PineconeDB
-    pinecone_obj = PineconeDB(index_name)
-    pinecone_obj.upsert()
+# Define the request model
+class QueryRequest(BaseModel):
+    query: str
 
+
+# Step 1: Create an index in Pinecone
+index_name = "wikipedia-embeddings"
+
+# Initialize Cohere
+co = cohere.Client(os.environ["COHERE_API_KEY"])
+
+# Initialize the PineconeDB
+pinecone_obj = PineconeDB(index_name)
+pinecone_obj.upsert()
+
+
+@app.post("/ask")
+async def ask_endpoint(request: QueryRequest):
+    # Get the embeddings
+    query_embeds = co.embed([request.query], model="multilingual-22-12").embeddings
+
+    # Query the PineconeDB
     result = pinecone_obj.query(query_embedding=query_embeds[0])
 
-    print(result)
-    # Output:
-    # {
-    #     "matches": [
-    #         {
-    #             "id": "9",
-    #             "metadata": {
-    #                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
-    #             },
-    #             "score": 40.6401978,
-    #             "values": [0.479291856, ..., 0.31344567],
-    #         }
-    #     ],
-    #     "namespace": "",
-    # }
+    return {"result": result}
+
+
+# Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
+# uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# Output:
+# {
+#     "matches": [
+#         {
+#             "id": "9",
+#             "metadata": {
+#                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
+#             },
+#             "score": 40.6401978,
+#             "values": [0.479291856, ..., 0.31344567],
+#         }
+#     ],
+#     "namespace": "",
+# }
