@@ -106,20 +106,7 @@ async def ask(
     return {"result": result}
 
 
-# Run the FastAPI app using uvicorn (add this line in another file or in the __main__ block)
-# uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# Output:
-# {
-#     "matches": [
-#         {
-#             "id": "9",
-#             "metadata": {
-#                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
-#             },
-#             "score": 40.6401978,
-#             "values": [0.479291856, ..., 0.31344567],
-#         }
-#     ],
-#     "namespace": "",
-# }
+@app.on_event("shutdown")
+async def shutdown():
+    vector_db = get_vector_db()
+    vector_db.delete_index()
