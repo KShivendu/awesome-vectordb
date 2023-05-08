@@ -7,17 +7,25 @@ from typing import List
 
 
 class VectorDB:
-    def __init__(self, index_name):
+    def __init__(self, index_name, top_k: int = 3):
         self.index_name = index_name
         # Load the dataset
         self.dataset = load_dataset(
             "Cohere/wikipedia-22-12-simple-embeddings", split="train"
         )
+        self.top_k = 3
+
+    def upsert(self) -> str:
+        raise NotImplementedError
+
+    def query(self, query_embedding: List[float]) -> dict:
+        raise NotImplementedError
 
 
 class PineconeDB(VectorDB):
     def __init__(self, index_name):
         super().__init__(index_name)
+        self.batch_size = 50
         pinecone.init(
             api_key=os.environ["PINECONE_API_KEY"],
             environment=os.environ["PINECONE_ENVIRONMENT"],
@@ -43,11 +51,10 @@ class PineconeDB(VectorDB):
         # of 100 vectors or fewer over multiple upsert requests.
 
         # Upsert the vectors in batches of 50
-        batch_size = 50
         num_vectors = len(self.vectors)
 
-        for i in range(0, num_vectors, batch_size):
-            batch = self.vectors[i : i + batch_size]
+        for i in range(0, num_vectors, self.batch_size):
+            batch = self.vectors[i : i + self.batch_size]
             self.index.upsert(batch)
 
         return "Upserted successfully"
@@ -55,7 +62,7 @@ class PineconeDB(VectorDB):
     def query(self, query_embedding: List[float]) -> dict:
         return self.index.query(
             vector=query_embedding,
-            top_k=3,
+            top_k=self.top_k,
             include_values=True,
             include_metadata=True,
         )
