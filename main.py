@@ -88,9 +88,10 @@ index_name = "wikipedia-embeddings"
 # Initialize Cohere
 co = cohere.Client(os.environ["COHERE_API_KEY"])
 
-# Initialize the PineconeDB
-pinecone_obj = PineconeDB(index_name)
-pinecone_obj.upsert()
+@app.on_event("startup")
+async def startup_event():
+    vector_db = get_vector_db()
+    vector_db.upsert()
 
 
 @app.post("/ask")
