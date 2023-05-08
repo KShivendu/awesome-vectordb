@@ -88,6 +88,17 @@ index_name = "wikipedia-embeddings"
 # Initialize Cohere
 co = cohere.Client(os.environ["COHERE_API_KEY"])
 
+# Define the index name
+index_name = "wikipedia-embeddings"
+
+
+# Dependency function to choose a vector database implementation
+def get_vector_db() -> Type[VectorDatabase]:
+    # Choose either PineconeDatabase or QdrantDatabase here
+    vector_db_class = PineconeDB  # or QdrantDatabase
+    return vector_db_class(index_name)
+
+
 @app.on_event("startup")
 async def startup_event():
     vector_db = get_vector_db()
