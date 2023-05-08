@@ -4,9 +4,10 @@ import cohere
 import pinecone
 from datasets import load_dataset
 from typing import List
+from abc import ABC, abstractmethod
 
 
-class VectorDB:
+class VectorDB(ABC):
     def __init__(self, index_name, top_k: int = 3):
         self.index_name = index_name
         # Load the dataset
@@ -15,10 +16,16 @@ class VectorDB:
         )
         self.top_k = 3
 
+    @abstractmethod
     def upsert(self) -> str:
         raise NotImplementedError
 
+    @abstractmethod
     def query(self, query_embedding: List[float]) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self) -> str:
         raise NotImplementedError
 
 
@@ -87,17 +94,3 @@ if __name__ == "__main__":
     result = pinecone_obj.query(query_embedding=query_embeds[0])
 
     print(result)
-    # Output:
-    # {
-    #     "matches": [
-    #         {
-    #             "id": "9",
-    #             "metadata": {
-    #                 "text": "In the Old Testament, Almighty God is the one who created the world. The God of the Old Testament is not always presented as the only God who exists Even though there may be other gods, the God of the Old Testament is always shown as the only God whom Israel is to worship. The God of the Old Testament is the one 'true God'; only Yahweh is Almighty. Both Jews and Christians have always interpreted the Bible (both the 'Old' and 'New' Testaments) as an affirmation of the oneness of Almighty God."
-    #             },
-    #             "score": 40.6401978,
-    #             "values": [0.479291856, ..., 0.31344567],
-    #         }
-    #     ],
-    #     "namespace": "",
-    # }
