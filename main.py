@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from vectordb import PineconeDB, VectorDatabase, RedisDB
 
+# Initializations
 app = FastAPI()
 
 # Initialize Cohere
@@ -30,16 +31,16 @@ def get_vector_db() -> Type[VectorDatabase]:
     return vector_db_class(index_name)
 
 
-@app.on_event("startup")
-async def startup_event():
-    vector_db = get_vector_db()
-    vector_db.upsert()
+# @app.on_event("startup")
+# async def startup_event():
+#     vector_db = get_vector_db()
+#     vector_db.upsert()
 
 
 @app.post("/ask")
 async def ask(
     request: QueryRequest, vector_db: VectorDatabase = Depends(get_vector_db)
-):
+) -> dict:
     # Get the embeddings
     query_embeds = co.embed([request.query], model="multilingual-22-12").embeddings
 
@@ -49,7 +50,18 @@ async def ask(
     return {"result": result}
 
 
+# @app.post("/upsert")
+# async def upsert():
+#     vector_db = get_vector_db()
+    return vector_db.upsert()
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 # @app.on_event("shutdown")
 # async def shutdown():
 #     vector_db = get_vector_db()
-#     vector_db.delete_index()
+# #     vector_db.delete_index()
