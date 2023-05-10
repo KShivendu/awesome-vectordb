@@ -1,3 +1,5 @@
 pinecone-client==2.2.1
 cohere==4.3.0
 datasets==2.12.0
+redis==4.5.4
+numpy==1.21.6

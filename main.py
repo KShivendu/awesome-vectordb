@@ -5,7 +5,7 @@ import cohere
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 
-from vectordb import PineconeDB, VectorDatabase
+from vectordb import PineconeDB, VectorDatabase, RedisDB
 
 app = FastAPI()
 
@@ -14,6 +14,8 @@ co = cohere.Client(os.environ["COHERE_API_KEY"])
 
 # Define the index name
 index_name = "wikipedia-embeddings"
+
+vector_db = None
 
 
 # Define the request model
@@ -24,7 +26,7 @@ class QueryRequest(BaseModel):
 # Dependency function to choose a vector database implementation
 def get_vector_db() -> Type[VectorDatabase]:
     # Choose either PineconeDatabase or QdrantDatabase here
-    vector_db_class = PineconeDB  # or QdrantDatabase
+    vector_db_class = RedisDB  # or QdrantDatabase
     return vector_db_class(index_name)
 
 
@@ -47,7 +49,7 @@ async def ask(
     return {"result": result}
 
 
-@app.on_event("shutdown")
-async def shutdown():
-    vector_db = get_vector_db()
-    vector_db.delete_index()
+# @app.on_event("shutdown")
+# async def shutdown():
+#     vector_db = get_vector_db()
+#     vector_db.delete_index()
