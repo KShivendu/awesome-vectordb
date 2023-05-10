@@ -213,8 +213,8 @@ class RedisDB(VectorDatabase):
     def __init__(self, index_name):
         super().__init__(index_name)
         self.batch_size = 1000  # Adjust the batch size as per your requirements
-        self.redis_client = redis.from_url(url="redis://localhost:6379")
-        # self.redis_client = redis.from_url(url=os.environ["REDIS_URL"])
+        # self.redis_client = redis.from_url(url="redis://localhost:6379")
+        self.redis_client = redis.from_url(url=os.environ["REDIS_URL"])
 
         logger.info("Redis client initialized")
 
@@ -245,7 +245,7 @@ class RedisDB(VectorDatabase):
                     },
                 ),
             )
-            prefix = "doc:"
+            prefix = f"doc:{self.index_name}"
 
             # Create Redis Index
             self.redis_client.ft(index_name=self.index_name).create_index(
