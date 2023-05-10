@@ -23,6 +23,7 @@ class VectorDatabase:
         )
         logger.info(f"Dataset loaded with {len(self.dataset)} records")
         self.top_k = top_k
+        self.dimension = 768
 
     def upsert(self) -> str:
         raise NotImplementedError
@@ -49,7 +50,7 @@ class PineconeDB(VectorDatabase):
         )
         # Create the index if it doesn't exist
         if self.index_name not in pinecone.list_indexes():
-            pinecone.create_index(index_name, dimension=768, metric="cosine")
+            pinecone.create_index(index_name, dimension=self.dimension, metric="cosine")
 
         # Connect to the index
         self.index = pinecone.Index(index_name=index_name)
@@ -123,7 +124,7 @@ class QdrantDB(VectorDatabase):
 
     def __init__(self, index_name):
         super().__init__(index_name)
-        self.batch_size = 100  # Adjust the batch size as per your requirements
+        self.batch_size = 1000  # Adjust the batch size as per your requirements
 
         self.qdrant_client = QdrantClient(
             os.environ["QDRANT_URL"],
@@ -140,7 +141,7 @@ class QdrantDB(VectorDatabase):
             self.qdrant_client.recreate_collection(
                 collection_name=self.index_name,
                 vectors_config=models.VectorParams(
-                    size=768, distance=models.Distance.COSINE
+                    size=self.dimension, distance=models.Distance.COSINE
                 ),
             )
 
