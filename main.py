@@ -5,7 +5,7 @@ import cohere
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 
-from vectordb import PineconeDB, VectorDatabase, RedisDB
+from vectordb import PineconeDB, QdrantDB, RedisDB, VectorDatabase
 
 # Initializations
 app = FastAPI()
@@ -16,7 +16,7 @@ co = cohere.Client(os.environ["COHERE_API_KEY"])
 # Define the index name
 index_name = "wikipedia-embeddings"
 
-vector_db = None
+# vector_db = None
 
 
 # Define the request model
@@ -31,10 +31,10 @@ def get_vector_db() -> Type[VectorDatabase]:
     return vector_db_class(index_name)
 
 
-# @app.on_event("startup")
-# async def startup_event():
-#     vector_db = get_vector_db()
-#     vector_db.upsert()
+@app.on_event("startup")
+async def startup_event():
+    vector_db = get_vector_db()
+    vector_db.upsert()
 
 
 @app.post("/ask")
@@ -53,7 +53,7 @@ async def ask(
 # @app.post("/upsert")
 # async def upsert():
 #     vector_db = get_vector_db()
-    return vector_db.upsert()
+# return vector_db.upsert()
 
 
 @app.get("/health")

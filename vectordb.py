@@ -2,16 +2,16 @@ import math
 import os
 from typing import List
 
+import numpy as np
 import pinecone
+import redis
 from datasets import load_dataset
 from loguru import logger
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.models import CollectionStatus, PointStruct, UpdateStatus
-import redis
 from redis.commands.search.field import TextField, VectorField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
-import numpy as np
 from redis.commands.search.query import Query
 
 
@@ -254,7 +254,6 @@ class RedisDB(VectorDatabase):
             )
 
     def upsert(self) -> str:
-
         # Write data to redis
         pipeline = self.redis_client.pipeline(transaction=False)
         for i, data in enumerate(self.dataset):
