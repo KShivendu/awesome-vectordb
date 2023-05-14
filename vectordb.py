@@ -2,12 +2,17 @@ import math
 import os
 from typing import List
 
+import numpy as np
 import pinecone
+import redis
 from datasets import load_dataset
 from loguru import logger
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.models import CollectionStatus, PointStruct, UpdateStatus
+from redis.commands.search.field import TextField, VectorField
+from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search.query import Query
 
 
 class VectorDatabase:
@@ -20,7 +25,7 @@ class VectorDatabase:
         # Load the dataset
         self.dataset = load_dataset(
             "Cohere/wikipedia-22-12-simple-embeddings", split="train"
-        )
+        ).select(range(1000))
         logger.info(f"Dataset loaded with {len(self.dataset)} records")
         self.top_k = top_k
         self.dimension = 768
@@ -201,4 +206,99 @@ class QdrantDB(VectorDatabase):
 
     def delete_index(self) -> str:
         self.qdrant_client.delete_collection(collection_name=self.index_name)
+        return "Index deleted"
+
+
+class RedisDB(VectorDatabase):
+    def __init__(self, index_name):
+        super().__init__(index_name)
+        self.batch_size = 1000  # Adjust the batch size as per your requirements
+        # self.redis_client = redis.from_url(url="redis://localhost:6379")
+        self.redis_client = redis.from_url(url=os.environ["REDIS_URL"])
+
+        logger.info("Redis client initialized")
+
+        def check_redis_index() -> bool:
+            """Check if Redis index exists."""
+            logger.info(f"Checking if index {self.index_name} exists")
+            try:
+                self.redis_client.ft(self.index_name).info()
+            except:  # noqa: E722
+                logger.info(f"Index {self.index_name} does not exist")
+                return False
+            logger.info(f"Index {self.index_name} already exists")
+            return True
+
+        if not check_redis_index():
+            logger.info(f"Creating index {self.index_name}")
+            # Constants
+            schema = (
+                TextField(name="text"),
+                TextField(name="metadata"),
+                VectorField(
+                    "embedding",
+                    "FLAT",
+                    {
+                        "TYPE": "FLOAT32",
+                        "DIM": self.dimension,
+                        "DISTANCE_METRIC": "COSINE",
+                    },
+                ),
+            )
+            prefix = f"doc:{self.index_name}"
+
+            # Create Redis Index
+            self.redis_client.ft(index_name=self.index_name).create_index(
+                fields=schema,
+                definition=IndexDefinition(prefix=[prefix], index_type=IndexType.HASH),
+            )
+
+    def upsert(self) -> str:
+        # Write data to redis
+        pipeline = self.redis_client.pipeline(transaction=False)
+        for i, data in enumerate(self.dataset):
+            # Use provided values by default or fallback
+            key = data["id"]
+            metadata = data["title"]
+            embedding = data["emb"]
+            text = data["text"]
+            pipeline.hset(
+                key,
+                mapping={
+                    "text": text,
+                    "vector": np.array(embedding, dtype=np.float32).tobytes(),
+                    "metadata": metadata,
+                },
+            )
+
+            # Write batch
+            if i % self.batch_size == 0:
+                pipeline.execute()
+
+        # Cleanup final batch
+        pipeline.execute()
+
+        return "Upserted successfully"
+
+    def query(self, query_embedding: List[float]) -> dict:
+        # base_query = (
+        #     f"(@metadata:{ Old Testament })=>[KNN {self.top_k} @vector $query_embedding AS score]"
+        # )
+        # logger.info(f"base query: {base_query}")
+        query = (
+            Query("*=>[KNN 3 @vector $query_embedding AS score]")
+            .return_fields("text", "score")
+            .dialect(2)
+        )
+
+        query_params = {
+            "query_embedding": np.array(query_embedding, dtype=np.float32).tobytes()
+        }
+        # logger.info(f"byte embedding: {query_params['query_embedding']}")
+        result = self.redis_client.ft(self.index_name).search(query, query_params)
+        logger.info(f"result: {result}, type: {type(result)}")
+        return result
+
+    def delete_index(self) -> str:
+        self.redis_client.ft(self.index_name).drop_index(delete_documents=True)
         return "Index deleted"
