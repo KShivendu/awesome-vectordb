@@ -1,5 +1,3 @@
-Here's your edited blog post:
-
 # The Ultimate Guide to VectorDB
 
 Your one-stop resource for decision-making and working with VectorDBs aka Vector Databases, Vector Search Engines
@@ -31,16 +29,15 @@ Pinecone is a vector database that stands out for being web-dev friendly. While 
 7. Developer Experience: The only issue with Pinecone is that the API specifically asks us to throttle our upserts to about 100 vectors per batch, which can delay processes. However, they do offer an alternative solution using gRPC and streaming upserts, which is a bit more work. You can read more about it [here](https://docs.pinecone.io/docs/performance-tuning).
 
 ## Qdrant
-Qdrant is an open-source vector database with support for updates and text management using payloads. It can handle a variety of query payloads, including text, embeddings, geospatial information and other data types that fit into the payload structure. This makes Qdrant a flexible and powerful option for different use cases. You do have to make the embeddings externally and insert/upsert though.
+Qdrant is a versatile open-source vector database written in Rust, it's a performance first view of the tooling. It handles various query payloads, such as text, embeddings, geospatial information, and other data types compatible with the payload structure. This versatility makes Qdrant a robust and adaptable choice for diverse use cases. However, you must create embeddings externally before insertion or upsertion.
 
-1. Security: As Qdrant is open-source, it comes in two flavors: One where you can run locally and one that is hosted on the cloud. The local version can be run using a pre-built docker image. The cloud version is hosted only on AWS(while in they're in beta). The cloud version comes with and api key and a path to the cloud instance for every cluster. Also, there is a mechanism to have one api key to access all the clusters - if you're keen on central management etc. *The local version does not require any authentication.*??
-2. Streaming index option: Qdrant does not support streaming indexes.
-3. Updates: Qdrant supports updates.
-4. Payload Management: Qdrant allows you to store any information along with the vector as a JSON payload. Additionally, you can also opt to do an indexing on payloads for better filtering and querying. You can read more about it [here](https://qdrant.tech/documentation/payload/#payload-indexing).
-5. Pricing: Qdrant is open-source. So, it's free to use. But if you'd like to use the cloud version, you'd have to pay for their managed instance. You can find more details [here](https://qdrant.tech/pricing/). The balancing act here w.r.t pricing is how you'd like some of your data(vector or payload) to be stored and persisted. Whether In-memory or on disk or a hybrid of these two. You can read more about it [here](https://qdrant.tech/documentation/storage/). PS: The In-memory option pricing might get a little steep if you have a lot of data.
-6. Performance: *Qdrant is quite fast. It's latency is in the range of 10-20ms. It's throughput is in the range of 1000-2000 queries per second. It's RAM usage is in the range of 1-2GB and CPU usage is in the range of 0.1-0.2 cores.* <- Change this.
-7. Develoeper Experience: It's in a very nascent stage imho as some of the error messages we faced 
-while using the cloud variant weren't even related to the actual issue. 
+1. Security: Qdrant offers two versions: a local version that can be run using a pre-built Docker image, and a cloud-hosted version available only on AWS (during the beta phase). The cloud version provides an API key and a path to the cloud instance for each cluster. For centralized management, there's an option to use one API key to access all clusters. The local version, however, does not require any authentication.
+2. Streaming index option: Qdrant does not currently support streaming indexes.
+3. Updates: Qdrant fully supports updates.
+4. Payload Management: Qdrant empowers you to store any accompanying information as a JSON payload with the vector. There's also an option to index payloads for improved filtering and querying capabilities. You can read more about this [here](https://qdrant.tech/documentation/payload/#payload-indexing).
+5. Pricing: As an open-source tool, Qdrant is free. However, for utilizing the cloud version, you'll need to pay for their managed instance. More details are available [here](https://qdrant.tech/pricing/). A crucial aspect to consider when it comes to pricing is the mode of data (vector or payload) storage and persistence—whether in-memory, on disk, or a hybrid of both. More on this can be found [here](https://qdrant.tech/documentation/storage/). Note: In-memory option pricing could escalate with large volumes of data.
+6. Performance: *TK Kindly provide the precise performance metrics for Qdrant.*
+7. Developer Experience: Qdrant is still in its early stages, which may account for occasional confusion, like the instance of receiving unrelated error messages while using the cloud variant. Nonetheless, the continuous updates and the supportive community are addressing these issues proactively. The upsert or insert limits are not enforced on the client. The `gRPC` mode is easy to setup for higher throughput. 
 
 ## Weaviate
 Weaviate is another open-source vector database. I didn't quite understand it's update capabilities clearly. It provides some text management and also offers schemas to define structure. Weaviate can handle a diverse set of query payloads, including text, embeddings, and any other data as a blob. This level of versatility makes Weaviate suitable for a wide range of applications.
