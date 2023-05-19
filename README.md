@@ -37,45 +37,42 @@ Qdrant is a versatile open-source vector database written in Rust, it's a perfor
 4. Payload Management: Qdrant empowers you to store any accompanying information as a JSON payload with the vector. There's also an option to index payloads for improved filtering and querying capabilities. You can read more about this [here](https://qdrant.tech/documentation/payload/#payload-indexing).
 5. Pricing: As an open-source tool, Qdrant is free. However, for utilizing the cloud version, you'll need to pay for their managed instance. More details are available [here](https://qdrant.tech/pricing/). A crucial aspect to consider when it comes to pricing is the mode of data (vector or payload) storage and persistence—whether in-memory, on disk, or a hybrid of both. More on this can be found [here](https://qdrant.tech/documentation/storage/). Note: In-memory option pricing could escalate with large volumes of data.
 6. Performance: *TK Kindly provide the precise performance metrics for Qdrant.*
-7. Developer Experience: Qdrant is still in its early stages, which may account for occasional confusion, like the instance of receiving unrelated error messages while using the cloud variant. Nonetheless, the continuous updates and the supportive community are addressing these issues proactively. The upsert or insert limits are not enforced on the client. The `gRPC` mode is easy to setup for higher throughput. 
+7. Developer Experience: Qdrant is still in its early stages, which may account for occasional confusion, like the instance of receiving unrelated error messages while using the cloud variant. Nonetheless, the continuous updates and the supportive community are addressing these issues proactively. The upsert or insert limits are not enforced on the client. The `gRPC` mode is easy to setup for higher throughput.
 
 ## Weaviate
-Weaviate is another open-source vector database. I didn't quite understand it's update capabilities clearly. It provides some text management and also offers schemas to define structure. Weaviate can handle a diverse set of query payloads, including text, embeddings, and any other data as a blob. This level of versatility makes Weaviate suitable for a wide range of applications.
+Weaviate is an open-source vector database with robust capabilities for handling diverse query payloads, including text, embeddings, and any other data as a blob. It also offers schemas to define structure, which significantly adds to its adaptability across different applications. However, its update capabilities could be more clearly defined.
 
-1. Security: Weaviate is open-source. So, it comes in two flavors: One where you can run locally and one that is hosted on the cloud. The local version can be run using a pre-built docker image. There are two methods available for authentication. 1. Via the API key and 2. Via OIDC authentication (WCS username & password). The recommended method is to use the API key. You can also choose to not have an authentication method but that's not recommended. You can read more about it [here](https://weaviate.io/developers/weaviate/quickstart/connect#overview).
-2. Streaming index option: Weaviate does support streaming indexes via their Graphql API.
+1. Security: Weaviate can be run both locally using a pre-built Docker image and hosted on the cloud. Two authentication methods are available: 1. Via the API key, and 2. Via OIDC authentication (WCS username & password), with the API key being the recommended method. While it's possible to opt out of authentication, it's not advised due to potential security risks. More details on this can be found [here](https://weaviate.io/developers/weaviate/quickstart/connect#overview).
+2. Streaming index option: Weaviate supports streaming indexes through their GraphQL API.
 3. Updates: Weaviate supports updates.
-4. Payload Management: Weaviate allows you to store any information based on the class and it's respective schema(data structure of your data) you define. You can read more about it [here](https://weaviate.io/developers/weaviate/configuration/schema-configuration). That said, there is also an automatic schema detection and creation option available in Weaviate. But if you're sure about what kind of data you're going to store, it's better to define the schema yourself.
-5. Pricing: Weaviate is open-source. So, it's free to use. But if you'd like to use the cloud version, you'd have to pay for their managed instance or can use a hybrid option where you bring their database to your vpc/infrastructure. You can find more details [here](https://weaviate.io/pricing/). The pricing is pretty straightforward with you paying for the number of objects you store and the number of queries you make apart from the SLA tier you choose based on the criticality of your business.
-6. Performance: *Weaviate is quite fast. It's latency is in the range of 10-20ms. It's throughput is in the range of 1000-2000 queries per second. It's RAM usage is in the range of 1-2GB and CPU usage is in the range of 0.1-0.2 cores.* <- Change this.
-7. Developer Experience: It took up some time in defining the schema and understanding the data structure. But once that was done, it was pretty straightforward to use.
+4. Payload Management: Weaviate enables you to store any information based on the class and the corresponding schema you define. You can learn more about this [here](https://weaviate.io/developers/weaviate/configuration/schema-configuration). It's worth noting that Weaviate offers automatic schema detection and creation, although manually defining the schema might be advisable if you have a clear understanding of the data to be stored.
+5. Pricing: Being open-source, Weaviate is free. However, if you wish to use the cloud version, you'll need to pay for their managed instance or opt for a hybrid approach where you bring their database to your VPC/infrastructure. Detailed pricing information is available [here](https://weaviate.io/pricing/). Pricing is straightforward, dependent on the number of stored objects, the number of queries you make, and the chosen SLA tier based on the criticality of your business.
+6. Performance: *Kindly provide the precise performance metrics for Weaviate.*
+7. Developer Experience: Initial stages of schema definition and understanding the data structure can take some time. However, once familiarized with this process, Weaviate becomes quite straightforward to use.
 
 ## FAISS
-FAISS (Facebook AI Similarity Search) is a library developed by Facebook AI that excels in efficient similarity search and clustering of high-dimensional vectors. Its update capabilities vary based on the type of index used - while flat indices don't support updates, IVF indices do. FAISS is not designed for text management and requires external handling of text data. It predominantly deals with embeddings as a query payload. Being an open-source library, FAISS offers the opportunity for customization and detailed understanding of its internals. It is also NOT a database. 
+FAISS (Facebook AI Similarity Search) is a highly efficient library developed by Facebook AI for similarity search and clustering of high-dimensional vectors. Its capacity for updates depends on the index type in use - flat indices do not support updates, while IVF indices do. FAISS, not being a database, is focused primarily on embeddings and does not offer text management, necessitating external handling of text data. As an open-source library, it provides opportunities for customization and in-depth exploration of its internal workings.
 
-1. Security: FAISS is open-source and can only be run locally. So, there is no security mechanism available.
+1. Security: Being open-source and designed to run only locally, FAISS does not come with a built-in security mechanism.
 2. Streaming index option: FAISS does not support streaming indexes.
-3. Updates: FAISS CPU does not support updates. But FAISS GPU does support updates with an IVF Index.
-4. Payload Management: FAISS does not support payload management. You'd need to handle it externally, mostly in tandem with a pickled file.
-5. Pricing: FAISS is open-source. So, it's free to use.
-6. Performance: *FAISS is quite fast. It's latency is in the range of 10-20ms. It's throughput is in the range of 1000-2000 queries per second. It's RAM usage is in the range of 1-2GB and CPU usage is in the range of 0.1-0.2 cores.* <- Change this.
-7. Developer Experience: With no update support and no payload management with the CPU version, the learning curve to some, might be a little steep. But with a very low memory footprint and a very high throughput, it's a great option for a lot of use cases.
-
+3. Updates: Updates are unsupported by FAISS CPU, but FAISS GPU does support updates with an IVF Index.
+4. Payload Management: FAISS lacks payload management support, hence it requires external handling, often using a pickled file.
+5. Pricing: As an open-source library, FAISS is free to use.
+6. Performance: *Kindly provide specific performance metrics for FAISS.*
+7. Developer Experience: Despite the lack of update support and payload management in the CPU version, which may steepen the learning curve for some users, FAISS offers a low memory footprint and high throughput, making it a valuable choice for many use cases.
 
 ## PG Vector
-PG Vector is an extension to PostgreSQL, offering vector support to this popular relational database. It supports updates and handles text as part of its PostgreSQL core functionalities. However, when it comes to query payloads, PG Vector is predominantly designed for embeddings. Other data types need to be managed like standard PostgreSQL data. Being an open-source extension, it allows customization and thorough inspection of the source code. [Benchmarks](https://ann-benchmarks.com/pgvector.html) indicate this is quite slow for more than 10 queries per second. 
+PG Vector is an extension for PostgreSQL that introduces vector support to this widely used relational database. It allows for updates and provides text management as a core functionality of PostgreSQL. Regarding query payloads, PG Vector is primarily geared towards embeddings, with other data types requiring standard PostgreSQL data management. Being open-source, it allows for customization and comprehensive inspection of the source code. [Benchmarks](https://ann-benchmarks.com/pgvector.html) suggest that it may perform slowly when handling more than 10 queries per second.
 
-1. Security: As PG vector is an extension to PostgreSQL, it inherits the security mechanisms of PostgreSQL. 
+1. Security: PG Vector, being an extension of PostgreSQL, inherits PostgreSQL's security mechanisms.
 2. Streaming index option: PG Vector does not support streaming indexes.
-3. Updates: PG Vector supports updates.
-4. Payload Management: As PG Vector is an extension to PostgreSQL, it just supports embeddings as a query payload. Other data types need to be managed like standard PostgreSQL data.
-5. Pricing: PG Vector is open-source. So, it's free to use. 
-6. Performance: *PG Vector is quite fast. It's latency is in the range of 10-20ms. It's throughput is in the range of 1000-2000 queries per second. It's RAM usage is in the range of 1-2GB and CPU usage is in the range of 0.1-0.2 cores.* <- Change this.
-7. Developer Experience: Contrary to most vector databases, as PG Vector is an extension to PostgreSQL, the way to think about data management is very similar to how you'd think about data management in any relational database. So, the learning curve is not that steep. It is one of the most sought after vector database options requested by the dev community to be added to the existing database options by a lot of cloud providers.
-
-
+3. Updates: PG Vector does support updates.
+4. Payload Management: PG Vector, as an extension of PostgreSQL, supports embeddings as a query payload. For other data types, they need to be managed as standard PostgreSQL data.
+5. Pricing: Being an open-source extension, PG Vector is free to use.
+6. Performance: *Please provide accurate performance metrics for PG Vector.*
+7. Developer Experience: In contrast to most vector databases, PG Vector's similarity to PostgreSQL in data management means a less steep learning curve. It's one of the most requested vector database options to be included by the developer community in the offerings of various cloud providers.
 
 ## Redis
-Redis is a popular in-memory data structure store used as a database, cache, and message broker. The vector support comes from its modules, which are open source even though the core Redis stack is closed source. It's unclear whether Redis supports updates in the context of vector data. It does provide text management capabilities through metadata. Like Qdrant and Weaviate, Redis can handle a wide variety of data types as query payloads, including text and embeddings.
+Redis, a widely used in-memory data structure store, serves as a database, cache, and message broker. Vector support is provided through its modules, which remain open source despite the core Redis stack being closed source. It's unclear whether Redis supports updates when dealing with vector data. However, it does offer text management capabilities through metadata and, like Qdrant and Weaviate, can handle a broad range of data types as query payloads, including text and embeddings.
 
 This post provides a high-level comparison of these databases, but I encourage you to explore each one in more depth to make an informed decision. As always, the best tool is the one that works best for you!
