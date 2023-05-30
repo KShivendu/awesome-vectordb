@@ -8,7 +8,7 @@ When dealing with high-dimensional data or working on tasks such as similarity s
 
 We'll be focusing on:
 
-1. Security 
+1. Security
 2. Streaming index options
 3. Updates
 4. Payload Management
@@ -75,37 +75,3 @@ PG Vector is an extension for PostgreSQL that introduces vector support to this 
 ## Redis
 Redis, a widely used in-memory data structure store, serves as a database, cache, and message broker. Vector support is provided through its modules, which remain open source despite the core Redis stack being closed source. It's unclear whether Redis supports updates when dealing with vector data. However, it does offer text management capabilities through metadata and, like Qdrant and Weaviate, can handle a broad range of data types as query payloads, including text and embeddings.
 
-# Optimizing Vector Databases: Tricks and Best Practices
-
-## Querying in Vector Databases
-* Understanding the Querying Process
-* Types of Queries: Similarity Search, k-NN, Range Search e.g. Grouped Documents, Metadata filtering
-* Query Optimization: Choosing the Right Index, Balancing Precision and Speed, Cost and throughput
-* Real-World Query Examples and How to Handle Them
-
-## Performance Optimization
-* Understanding Performance Metrics in Vector Space
-* Storage Optimization: Efficient Disk Usage, Reducing I/O Overhead
-* Load Balancing and Sharding: Distributing Data and Workload
-* Hardware Considerations: Effect of Memory and CPU on Performance
-* Benchmarking and Monitoring: Tools and Techniques for Performance Tracking
-
-## Security Considerations
-* Data Encryption: Ensuring Data At Rest Security
-* Access Control: Managing User Permissions and Roles
-* Audit Logging: Tracking Data Access and Modifications
-* Securing Data Transfers: SSL/TLS, gRPC Security Features
-
-## Maintaining and Scaling Vector Databases
-* Routine Maintenance: Cleanup, Defragmentation, Periodic Re-indexing
-* Troubleshooting Common Issues: Performance Degradation, Failed Queries
-* Scalability Strategies: Scaling Up vs Scaling Out
-* Monitoring System Health: Keeping Track of System Metrics
-* Backup and Disaster Recovery: Best Practices for Data Safety
-
-## Additional Best Practices
-* Effective Use of gRPC: Optimizing Data Exchange and Communication
-* Advanced Search Techniques: Multimodal, Hybrid Search
-* Utilizing Payloads and Filters: Advanced Data Manipulation Techniques
-* Indexing Techniques: Choosing the Right Algorithm, Delayed Indexing
-* Understanding and Mitigating the "Curse of Dimensionality"
