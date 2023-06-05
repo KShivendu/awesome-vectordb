@@ -13,11 +13,10 @@ These are the steps that you need to follow to query a vector database:
 1. Similarity Search: It is performed by approximation nearest neighbours algorithms like HNSW, NMSLIB, etc.
 2. Metadata Filtering: This is traditional search on the metadata that you ingest along with the embeddings. You can do all kinds of filtering on the metadata: range queries, exact match, full text search, etc dependending on what the database supports.
 3. Recommendations: You can build a simple recommendation system based on this formula: `average_vector = avg(liked_vectors) + ( avg(liked_vectors) - avg(disliked_vectors) )` and then search for the average vector. Qdrant even provides an API for this out of the box.
-4. Hybrid sparse-dense search: You can use two different ML models: one with a dense vector that represents the semantic meaning of your data and another with a sparse vector where each position of a vector represents some attribute of the data and most of the positions are 0. This also allows you to weight certain parts of the query more than others. At the moment, this is only supported by Pinecone. (TODO: Is this doable with Qdrant? https://qdrant.tech/articles/hybrid-search/)
+4. Hybrid sparse-dense search: You can use two different ML models: one with a dense vector that represents the semantic meaning of your data and another with a sparse vector where each dimension of the vector represents some attribute of the data and most of the positions are 0. This also allows you to weight certain parts of the query more than others. At the moment, this is only supported by p1 and s1 pods of Pinecone.
 
 * Query Optimization: Choosing the Right Index, Balancing Precision and Speed, Cost and throughput
 
-TODO
 
 Qdrant params:
 - Quantization: in-memory quantization, with on-disk original vectors
@@ -26,12 +25,19 @@ Qdrant params:
 
 Pinecone params:
 - Pod type: https://docs.pinecone.io/docs/indexes#p1-pods https://docs.pinecone.io/docs/choosing-index-type-and-size
+- Distance metric: Eucledian, Cosine, and Dot product
+- Pod size: x1, x2, x4, and x8. Every step up in size doubles the storage as well as compute capacity of the pod.
 
-| Model | Storage Capacity | Dimensions | Top_k | QPS | Ideal for  |
-|-------|-----------------|-------------|-------|-----|------------|
-| s1    | 5M              | 768         | 10    | ~10 |      Ideal for large indexes with mode       |
-| p1    | 1M              | 768         | 10    | ~30 |            |
-| p2    | 1M              | 768         | 10    | ~150|            |
+Here's a comparison of the different pod types in Pinecone with 1M vectors of 768 dimensions:
+
+| Model |  QPS (Top_k=10) |   QPS (Top_k=250) | QPS (Top_k=1000) |                          Remarks                                       |
+|-------|-----------------|-------------------|------------------|------------------------------------------------------------------------|
+| p1    |      ~30        |        25         |       20         |             Ideal for low latency requirements                         |
+| p2    |     ~150        |        50         |       20         |     Highest QPS and lowest latency but data ingestion is slower than p1 and drop with # of dims. |
+| s1    |      ~10        |        25         |       20         | Ideal for large indexes with moderate latency requirements since it can hold 5x more indices   |
+
+
+TODO: Qdrant has many params but pinecone has a few (mainly pod type). It would be great this guide gives Qdrant configs that perform similar to pod types param of Pinecone
 
 * Real-World Query Examples and How to Handle Them
 
@@ -41,13 +47,14 @@ TODO
 ## Performance Optimization
 * Understanding Performance Metrics in Vector Space
 - QPS: Queries per second. Higher is better.
-- Latency (p99 and p95): Latency is the time taken to process a query. Lower is better.
-- Indexing time: Time taken to index a vector. Lower is better.
-
-TODO: Qdrant has many params but pinecone has a few. It would be great this guide gives Qdrant configs that perform similar to pod types param of Pinecone
+- Latency (p99 and p95): p99 is the 99th percentile of the latency. Lower is better.
+- Indexing time: Time taken to index vectors. Lower is better.
 
 * Storage Optimization: Efficient Disk Usage, Reducing I/O Overhead
--
+
+Qdrant:
+- https://qdrant.tech/articles/scalar-quantization/
+- https://qdrant.tech/articles/product-quantization/
 
 
 * Load Balancing and Sharding: Distributing Data and Workload
@@ -68,7 +75,7 @@ TODO: Qdrant has many params but pinecone has a few. It would be great this guid
 ## Security Considerations
 * Data Encryption: Ensuring Data At Rest Security
 1. Pinecone: They provide encryption at rest for their enterprise customers. https://www.pinecone.io/security/
-2. Qdrant: No information found so far in the docs
+2. Qdrant: No information found so far in the docs. Should skim the code once.
 
 * Access Control: Managing User Permissions and Roles
 - Pinecone: Somewhat limited to mainly two types of roles: Owner and Member on both [organisation](https://docs.pinecone.io/docs/organizations#organization-roles) and [project](https://docs.pinecone.io/docs/projects#project-roles) level.
@@ -80,7 +87,7 @@ TODO: Qdrant has many params but pinecone has a few. It would be great this guid
 
 * Securing Data Transfers: SSL/TLS, gRPC Security Features
 1. Qdrant:
-    - SSL/TLS: Supported by Qdrant and
+    - SSL/TLS: Supported by Qdrant
     - gRPC: Can be enabled in Qdrant using.
     ```yaml
     service:
@@ -88,7 +95,7 @@ TODO: Qdrant has many params but pinecone has a few. It would be great this guid
     ```
 
 2. Pinecone:
-    - SSL/TLS: Pinecone is served over HTTPS so all data transfers are encrypted by default. They encrypt data at rest and in transit. https://www.pinecone.io/security/
+    - SSL/TLS: Pinecone is served over HTTPS so all data transfers are encrypted by default. They encrypt data in transit. https://www.pinecone.io/security/
     - gRPC: Supported by the python SDK. You can use `index = pinecone.GRPCIndex("index-name")` to connect to the index using gRPC.
 
 ## Maintaining and Scaling Vector Databases
@@ -111,6 +118,7 @@ TODO: Qdrant has many params but pinecone has a few. It would be great this guid
 1. Qdrant
 - Qdrant OSS: Expand from [Docs](https://qdrant.tech/documentation/concepts/snapshots/#snapshots-for-the-whole-storage)
 - Qdrant Cloud: https://qdrant.tech/documentation/cloud/backups/#self-service-backups
+- Lastly, you can create qdrant collections from existing collections using the `init_from` param
 
 2. Pinecone
 - Create collection (static copy of your index that only consumes storage) for your index. Expand from [Docs](https://docs.pinecone.io/docs/back-up-indexes#create-a-backup-using-a-collection)
@@ -125,4 +133,4 @@ Note that you should also backup the original raw data from which you generated 
 * Understanding and Mitigating the "Curse of Dimensionality"
 
 
-TODO: Maybe add section for multi tenancy and mention how namespaces, vs metadata filtering, vs seperating collections can affect performance? https://docs.pinecone.io/docs/multitenancy
+TODO: Maybe add a section on different approaches for multi tenancy like namespaces, metadata filtering, and seperating collections can affect performance? https://docs.pinecone.io/docs/multitenancy
